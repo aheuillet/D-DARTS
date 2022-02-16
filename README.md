@@ -2,13 +2,13 @@
 
 *: This is the official implementation of D-DARTS.
 
-*Differentiable ARchiTecture Search (DARTS) is one of the most trending Neural Architecture Search (NAS) methods, drastically reducing search cost by resorting to Stochastic Gradient Descent (SGD) and weight-sharing. However, it also dramatically reduces the search space, thus excluding potential promising architectures from being discovered. In this article, we propose D-DARTS, a novel solution that addresses this problem by nesting several neural networks at the cell level instead of using weight-sharing to produce more diversified and specialized architectures. Moreover, we introduce a novel algorithm that can derive deeper architectures from a few trained cells, increasing performance and saving computation time. In addition, we also present an alternative search space (denoted DARTOpti) in which we optimize existing handcrafted architectures such as ResNet rather than starting from a blank canvas. This approach is accompanied by a novel metric that measures the distance between architectures inside our custom search space. Our solution achieves state-of-the-art on CIFAR-10, CIFAR-100, and ImageNet while featuring a search cost significantly lower than previous differentiable NAS approaches.*
+*Differentiable ARchiTecture Search (DARTS) is one of the most trending Neural Architecture Search (NAS) methods. It drastically reduces search cost by resorting to Stochastic Gradient Descent (SGD) and weight-sharing. However, it also dramatically reduces the search space, thus excluding potential promising architectures from being discovered. In this article, we propose D-DARTS, a novel solution that addresses this problem by nesting several neural networks at the cell level instead of using weight-sharing to produce more diversified and specialized architectures. Moreover, we introduce a novel algorithm that can derive deeper architectures from a few trained cells, increasing performance and saving computation time. In addition, we also present an alternative search space (denoted DARTOpti) in which we optimize existing handcrafted architectures such as ResNet rather than starting from scratch. This approach is accompanied by a novel metric that measures the distance between architectures inside our custom search space. Our solution achieves state-of-the-art on CIFAR-10, CIFAR-100, and ImageNet while featuring a search cost significantly lower than previous differentiable NAS approaches.*
 
 ## User Guide 
 
 ### Prerequisites
 
-> Python >= 3.6
+> Python >= 3.7
 
 `pip install -r requirements.txt`
 OR
@@ -21,7 +21,7 @@ Currently supported datasets are: CIFAR10, CIFAR100, and ImageNet (ILSVRC2012).
 
 > To use a specific dataset when searching or training, you must pass the `--dataset cifar10/cifar100/imagenet` and `--data path/to/the/dataset` arguments.
 
-### Run Search
+### Search for an architecture
 
 `python train_search.py --batch_size 96 --pretrain_epochs 0 --init_channels 16 --amp --no_arch_metric`
 
@@ -31,7 +31,7 @@ Currently supported datasets are: CIFAR10, CIFAR100, and ImageNet (ILSVRC2012).
 
 > Logs and results will be saved in the `logs/search` folder.
 
-### Run Search (DARTOpti)
+### Search for an architecture (DARTOpti)
 
 `python train_search.py --batch_size 96 --arch_baseline ResNet18 --amp`
 
@@ -39,7 +39,7 @@ Currently supported datasets are: CIFAR10, CIFAR100, and ImageNet (ILSVRC2012).
 
 > New architectures implemented in `genotypes.py` will automatically be available.
 
-### Single Model Training
+### Single model training
 
 `python train.py --auxiliary --cutout --amp --auto_aug --arch D-DARTS_threshold_sparse_cifar10_0.85_50 --batch_size 128 --epoch 600 --init_channels 36`
 
@@ -49,14 +49,21 @@ Currently supported datasets are: CIFAR10, CIFAR100, and ImageNet (ILSVRC2012).
 
 > Logs and results will be saved in the `logs/eval` folder.
 
-### Single Model Evaluation
+### Single model evaluation
 
 ```bash
 python evaluate_model.py --arch ResNet18_cifar100_threshold_sparse_0.85 --model_path best_models/DO-2-ResNet18_ImageNet.pth.tar --init_channels 64
 ``` 
 
-## Evaluation Results on CIFAR-10
-### Comparison with Other State-of-the-art Results (CIFAR-10)
+### Model Zoo
+
+Pretrained models can be found in the `best_models` directory.
+We currently provide the following pretrained models:
+- DO-2-ResNet18 (trained on ImageNet, 77% top-1-accuracy)
+- DO-2-ResNet50 (trained on ImageNet, 76.3% top-1-accuracy)
+
+## Evaluation results on CIFAR-10
+### Comparison with other state-of-the-art results (CIFAR-10)
  
 |  Model  | FLOPs  | Params  | Batch size  | lr | DP | Performance |
 |---|---|---|---|---|---|---|
@@ -71,7 +78,7 @@ python evaluate_model.py --arch ResNet18_cifar100_threshold_sparse_0.85 --model_
 
 *: Official result, as stated in the corresponding paper.
 
-### Comparison with Other State-of-the-art Results (ImageNet)
+### Comparison with other state-of-the-art results (ImageNet)
  
 |  Model  | FLOPs  | Params  | Batch size  | lr | DP | Performance | Searched On |
 |---|---|---|---|---|---|---|---|
@@ -85,6 +92,6 @@ python evaluate_model.py --arch ResNet18_cifar100_threshold_sparse_0.85 --model_
 
 *: Official result, as stated in the corresponding paper.
     
-# Acknowledgement 
+# Acknowledgements 
 
  **This code is based on the implementation of [DARTS](https://github.com/quark0/darts) and [FairDARTS](https://github.com/xiaomi-automl/FairDARTS).**

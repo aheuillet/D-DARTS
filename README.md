@@ -21,7 +21,7 @@ Currently supported datasets are: CIFAR10, CIFAR100, and ImageNet (ILSVRC2012).
 
 > To use a specific dataset when searching or training, you must pass the `--dataset cifar10/cifar100/imagenet` and `--data path/to/the/dataset` arguments.
 
-### Search for an architecture
+### Searching for an architecture
 
 `python train_search.py --batch_size 96 --pretrain_epochs 0 --init_channels 16 --amp --no_arch_metric`
 
@@ -31,7 +31,7 @@ Currently supported datasets are: CIFAR10, CIFAR100, and ImageNet (ILSVRC2012).
 
 > Logs and results will be saved in the `logs/search` folder.
 
-### Search for an architecture (DARTOpti)
+### Searching for an architecture (DARTOpti)
 
 `python train_search.py --batch_size 96 --arch_baseline ResNet18 --amp`
 
@@ -55,7 +55,7 @@ Currently supported datasets are: CIFAR10, CIFAR100, and ImageNet (ILSVRC2012).
 python evaluate_model.py --arch ResNet18_cifar100_threshold_sparse_0.85 --model_path best_models/DO-2-ResNet18_ImageNet.pth.tar --init_channels 64
 ``` 
 
-### Model Zoo
+### Model zoo
 
 Pretrained models can be found in the `best_models` directory.
 We currently provide the following pretrained models:

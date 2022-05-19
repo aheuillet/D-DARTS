@@ -6,6 +6,7 @@ import plotly.express as px
 import json
 from train import TrainArgs, TrainNetwork
 from scipy.stats import describe
+import time
 
 def hausdorff_metric(u, v, seed=0):
     '''
@@ -124,7 +125,7 @@ def global_hausdorff_distance(g1: Genotype_nested, g2: Genotype_nested, seed: in
 
 def benchmark_operations(num_epochs: int, num_runs: int, dataset: str = "cifar10", num_layers: int = 2, gpu: int = 0, dartopti: bool = True):
     prims = PRIMITIVES if dartopti else PRIMITIVES_DARTS
-    test_arch = Genotype_nested(genes=[residual_layer_simple]*num_layers, concat=range(2,6))
+    test_arch = Genotype_nested(genes=[residual_layer_simple]*num_layers, concat=range(2,6), reductions=range(1, num_layers))
     perfs = {}
     stats = {}
     for l in range(num_layers):
@@ -133,10 +134,11 @@ def benchmark_operations(num_epochs: int, num_runs: int, dataset: str = "cifar10
         for p in range(len(residual_layer_simple)):
             perfs[f"cell_{l}"][f"position_{p}"] = {}
             stats[f"cell_{l}"][f"position_{p}"] = {}
-            for op in prims:
-                print(f"Benchmarking operation {op}...")
-                _, to, fr = test_arch.genes[l][p]
-                test_arch.genes[l][p] = (op, to, fr)
+            arch = test_arch
+            for i, op in enumerate(prims):
+                print(f"Benchmarking operation {op} ({i+1}/{len(prims)})")
+                _, to, fr = arch.genes[l][p]
+                arch.genes[l][p] = (op, to, fr)
                 results = []
                 args = TrainArgs(test_arch, num_epochs, dataset, 64, num_layers, gpu)
                 for r in range(num_runs):
@@ -174,4 +176,7 @@ def plot_distance_heatmap():
 
 
 if __name__ == "__main__":
-    plot_distance_heatmap()
+    start = time.time()
+    benchmark_operations(10, 4, num_layers=3, gpu=2)
+    end = time.time()
+    print(f"Execution time in s: {end-start}")

@@ -40,7 +40,6 @@ parser.add_argument('--cutout_length', type=int, default=16, help='cutout length
 parser.add_argument('--label_smooth', type=float, default=0.1, help='label smoothing')
 parser.add_argument('--auto_aug', action='store_true', default=False, help='use auto augmentation')
 parser.add_argument('--drop_path_prob', type=float, default=0.2, help='drop path probability')
-parser.add_argument('--warm_restarts', type=int, default=0, help="Number of epochs before initial warm restart. Warm restarts are disabled if set to 0.")
 parser.add_argument('--save', type=str, default='EXP', help='experiment name')
 parser.add_argument('--seed', type=int, default=0, help='random seed')
 parser.add_argument('--arch', type=str, default='nestedDARTS_cell_threshold_sparse_0.85', help='which architecture to use (whole string or txt file location)')
@@ -76,7 +75,7 @@ class TrainArgs:
         self.layers = layers
         self.no_log = no_log
         self.data = os.path.join(os.path.expanduser('~'),'work/dataset/cifar/')
-        self.batch_size = 96
+        self.batch_size = 256
         self.learning_rate = 0.025
         self.start_epoch = 0
         self.momentum = 0.9
@@ -166,17 +165,17 @@ class TrainNetwork(object):
 
     def _init_model(self):
         if "baseline" in self.args.arch:
-            genotype = eval(f"genotypes.{self.args.arch.split('_')[1]}")
+            self.genotype = eval(f"genotypes.{self.args.arch.split('_')[1]}")
         elif isinstance(self.args.arch, Genotype_nested):
-            genotype = self.args.arch
+            self.genotype = self.args.arch
         else:
             with open(f'genotypes/{self.args.arch}.txt', 'r') as g:
-                genotype = eval(g.read())
+                self.genotype = eval(g.read())
         if self.args.dataset == "imagenet":
-            model = NetworkImageNet(self.args.init_channels, self.num_classes, self.args.layers, self.args.auxiliary, genotype, self.args.parse_method)
+            model = NetworkImageNet(self.args.init_channels, self.num_classes, self.args.layers, self.args.auxiliary, self.genotype, self.args.parse_method)
             inputs_r = (torch.randn(1, 3, 224, 224),)
         else:
-            model = NetworkCIFAR(self.args.init_channels, self.num_classes, self.args.layers, self.args.auxiliary, genotype, self.args.parse_method)
+            model = NetworkCIFAR(self.args.init_channels, self.num_classes, self.args.layers, self.args.auxiliary, self.genotype, self.args.parse_method)
             inputs_r = (torch.randn(1, 3, 224, 224),)
         flops, params = profile(model, inputs=inputs_r, verbose=False)
         self.logger.info('flops = %fM', flops / 1e6)
@@ -222,10 +221,7 @@ class TrainNetwork(object):
                 print("=> no checkpoint found at '{}'".format(self.args.resume))
 
         last_epoch = -1 if self.args.start_epoch == 0 else self.args.start_epoch
-        if args.warm_restarts > 0:
-            self.scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(self.optimizer, self.args.warm_restarts, T_mult=1, eta_min=0, last_epoch=last_epoch)
-        else:
-            self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, float(self.args.epochs), eta_min=0, last_epoch=last_epoch)
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, float(self.args.epochs), eta_min=0, last_epoch=last_epoch)
         # reload the scheduler if possible
         if self.args.resume and os.path.isfile(self.args.resume):
             checkpoint = torch.load(self.args.resume)
